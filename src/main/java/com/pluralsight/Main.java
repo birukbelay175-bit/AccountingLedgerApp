@@ -45,7 +45,6 @@ public class Main {
                     break;
 
                 case "X":
-                    System.out.println("Goodbye!");
                     running = false;
                     break;
 
