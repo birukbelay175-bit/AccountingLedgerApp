@@ -185,7 +185,7 @@ public class Main {
                     showPayments();
                     break;
                 case "R":
-                    System.out.println("Reports selected");
+                    showReportsMenu();
                     break;
                 case "H":
                     inLedger = false;
@@ -195,6 +195,72 @@ public class Main {
             }
         }
     }
+    public static void showReportsMenu() {
+        boolean inReports = true;
+
+        while (inReports) {
+            System.out.println("\n=== Reports Menu ===");
+            System.out.println("1) Month To Date");
+            System.out.println("2) Previous Month");
+            System.out.println("3) Year To Date");
+            System.out.println("4) Previous Year");
+            System.out.println("5) Search by Vendor");
+            System.out.println("0) Back");
+            System.out.print("Choose an option: ");
+
+            String choice = scanner.nextLine();
+
+            switch (choice) {
+                case "1":
+                    System.out.println("Month To Date (coming next)");
+                    break;
+                case "2":
+                    System.out.println("Previous Month (coming next)");
+                    break;
+                case "3":
+                    System.out.println("Year To Date (coming next)");
+                    break;
+                case "4":
+                    System.out.println("Previous Year (coming next)");
+                    break;
+                case "5":
+                    searchByVendor();
+                    break;
+                case "0":
+                    inReports = false;
+                    break;
+                default:
+                    System.out.println("Invalid option");
+            }
+        }
+    }
+    public static void searchByVendor() {
+        System.out.print("Enter vendor name: ");
+        String input = scanner.nextLine().toLowerCase();
+
+        try {
+            java.io.BufferedReader reader =
+                    new java.io.BufferedReader(
+                            new java.io.FileReader("src/main/resources/transactions.csv"));
+
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split("\\|");
+                String vendor = parts[3].toLowerCase();
+
+                if (vendor.contains(input)) {
+                    System.out.println(line);
+                }
+            }
+
+            reader.close();
+
+        } catch (Exception e) {
+            System.out.println("Error searching vendor.");
+        }
+    }
+
     public static void showLedger() {
         try {
             java.io.BufferedReader reader =
