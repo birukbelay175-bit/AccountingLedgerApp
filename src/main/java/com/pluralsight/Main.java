@@ -216,13 +216,13 @@ public class Main {
                    showMonthToDate();
                     break;
                 case "2":
-                    System.out.println("Previous Month (coming next)");
+                     showPreviousMonth();
                     break;
                 case "3":
-                    System.out.println("Year To Date (coming next)");
+                   showYearToDate();
                     break;
                 case "4":
-                    System.out.println("Previous Year (coming next)");
+                    showPreviousYear();
                     break;
                 case "5":
                     searchByVendor();
@@ -292,6 +292,111 @@ public class Main {
             System.out.println("Error reading Month To Date.");
         }
     }
+    public static void showPreviousMonth() {
+        try {
+            java.io.BufferedReader reader =
+                    new java.io.BufferedReader(
+                            new java.io.FileReader("src/main/resources/transactions.csv"));
+
+            String line;
+            boolean found = false;
+
+            java.time.LocalDate now = java.time.LocalDate.now();
+            java.time.LocalDate previousMonth = now.minusMonths(1);
+
+            System.out.println("\n=== Previous Month ===");
+
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split("\\|");
+                java.time.LocalDate transactionDate = java.time.LocalDate.parse(parts[0]);
+
+                if (transactionDate.getMonth() == previousMonth.getMonth()
+                        && transactionDate.getYear() == previousMonth.getYear()) {
+
+                    System.out.println(line);
+                    found = true;
+                    // MARK THAT WE FOUND SOMETHING
+                }
+            }
+
+            if (!found) {
+                // CHECK AFTER LOOP
+                System.out.println("No transactions found for previous month.");
+            }
+
+            reader.close();
+
+        } catch (Exception e) {
+            System.out.println("Error reading Previous Month.");
+        }
+    }
+    public static void showYearToDate() {
+        try {
+            java.io.BufferedReader reader =
+                    new java.io.BufferedReader(
+                            new java.io.FileReader("src/main/resources/transactions.csv"));
+
+            String line;
+            boolean found = false;
+
+            java.time.LocalDate now = java.time.LocalDate.now();
+
+            System.out.println("\n=== Year To Date ===");
+
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split("\\|");
+                java.time.LocalDate transactionDate = java.time.LocalDate.parse(parts[0]);
+
+                if (transactionDate.getYear() == now.getYear()) {
+                    System.out.println(line);
+                    found = true;
+                }
+            }
+
+            if (!found) {
+                System.out.println("No transactions found for this year.");
+            }
+
+            reader.close();
+
+        } catch (Exception e) {
+            System.out.println("Error reading Year To Date.");
+        }
+    }
+    public static void showPreviousYear() {
+        try {
+            java.io.BufferedReader reader =
+                    new java.io.BufferedReader(
+                            new java.io.FileReader("src/main/resources/transactions.csv"));
+
+            String line;
+            boolean found = false;
+
+            java.time.LocalDate now = java.time.LocalDate.now();
+            int previousYear = now.getYear() - 1;
+
+            System.out.println("\n=== Previous Year ===");
+
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split("\\|");
+                java.time.LocalDate transactionDate = java.time.LocalDate.parse(parts[0]);
+
+                if (transactionDate.getYear() == previousYear) {
+                    System.out.println(line);
+                    found = true;
+                }
+            }
+
+            if (!found) {
+                System.out.println("No transactions found for previous year.");
+            }
+
+            reader.close();
+
+        } catch (Exception e) {
+            System.out.println("Error reading Previous Year.");
+        }
+    }
     public static void showLedger() {
         try {
             java.io.BufferedReader reader =
@@ -299,7 +404,6 @@ public class Main {
                             new java.io.FileReader("src/main/resources/transactions.csv"));
 
             String line;
-
             System.out.println("\n=== Ledger ===");
 
             while ((line = reader.readLine()) != null) {
