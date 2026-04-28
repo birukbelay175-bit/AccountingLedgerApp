@@ -41,7 +41,7 @@ public class Main {
                     break;
 
                 case "L":
-                    showLedger();
+                    showLedgerMenu();
                     break;
 
                 case "X":
@@ -133,7 +133,6 @@ public class Main {
 
         } catch (Exception e) {
             System.out.println("Error reading deposits.");
-            e.printStackTrace();
         }
     }
     public static void showPayments() {
@@ -159,6 +158,41 @@ public class Main {
 
         } catch (Exception e) {
             System.out.println("Error reading payments.");
+        }
+    }
+    public static void showLedgerMenu() {
+        boolean inLedger = true;
+
+        while (inLedger) {
+            System.out.println("\n=== Ledger Menu ===");
+            System.out.println("A) All");
+            System.out.println("D) Deposits");
+            System.out.println("P) Payments");
+            System.out.println("R) Reports");
+            System.out.println("H) Home");
+            System.out.print("Choose an option: ");
+
+            String choice = scanner.nextLine().trim().toUpperCase();
+
+            switch (choice) {
+                case "A":
+                    showLedger();
+                    break;
+                case "D":
+                    showDeposits();
+                    break;
+                case "P":
+                    showPayments();
+                    break;
+                case "R":
+                    System.out.println("Reports selected");
+                    break;
+                case "H":
+                    inLedger = false;
+                    break;
+                default:
+                    System.out.println("Invalid option");
+            }
         }
     }
     public static void showLedger() {
