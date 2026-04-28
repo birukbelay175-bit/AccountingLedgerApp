@@ -213,7 +213,7 @@ public class Main {
 
             switch (choice) {
                 case "1":
-                    System.out.println("Month To Date (coming next)");
+                   showMonthToDate();
                     break;
                 case "2":
                     System.out.println("Previous Month (coming next)");
@@ -235,6 +235,7 @@ public class Main {
             }
         }
     }
+
     public static void searchByVendor() {
         System.out.print("Enter vendor name: ");
         String input = scanner.nextLine().toLowerCase();
@@ -261,7 +262,36 @@ public class Main {
             System.out.println("Error searching vendor.");
         }
     }
+    public static void showMonthToDate() {
+        try {
+            java.io.BufferedReader reader =
+                    new java.io.BufferedReader(
+                            new java.io.FileReader("src/main/resources/transactions.csv"));
 
+            String line;
+
+            System.out.println("\n=== Month To Date ===");
+
+            java.time.LocalDate now = java.time.LocalDate.now();
+
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split("\\|");
+
+                java.time.LocalDate transactionDate = java.time.LocalDate.parse(parts[0]);
+
+                if (transactionDate.getMonth() == now.getMonth()
+                        && transactionDate.getYear() == now.getYear()) {
+
+                    System.out.println(line);
+                }
+            }
+
+            reader.close();
+
+        } catch (Exception e) {
+            System.out.println("Error reading Month To Date.");
+        }
+    }
     public static void showLedger() {
         try {
             java.io.BufferedReader reader =
