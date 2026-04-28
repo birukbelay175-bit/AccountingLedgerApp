@@ -1,5 +1,8 @@
 package com.pluralsight;
 
+import java.io.*;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Scanner;
 
 public class Main {
@@ -11,42 +14,39 @@ public class Main {
         showHomeScreen();
     }
 
-    // Main menu
+    // Home screen menu
     public static void showHomeScreen() {
-        boolean running = true;
-
-        while (running) {
+        while (true) {
             System.out.println("\n=== Accounting Ledger App ===");
             System.out.println("D) Add Deposit");
             System.out.println("P) Make Payment");
             System.out.println("L) Ledger");
             System.out.println("X) Exit");
-            System.out.print("Choose an option: ");
+            System.out.print("Choose option: ");
 
             String choice = scanner.nextLine().trim().toUpperCase();
 
             switch (choice) {
                 case "D":
-                    addDeposit();
+                    addTransaction(true);
                     break;
                 case "P":
-                    addPayment();
+                    addTransaction(false);
                     break;
                 case "L":
                     showLedgerMenu();
                     break;
                 case "X":
                     System.out.println("Goodbye!");
-                    running = false;
-                    break;
+                    return;
                 default:
                     System.out.println("Invalid option.");
             }
         }
     }
 
-    // Add money coming into the account
-    public static void addDeposit() {
+    // Adds either a deposit or payment
+    public static void addTransaction(boolean isDeposit) {
         try {
             System.out.print("Enter description: ");
             String description = scanner.nextLine();
@@ -57,179 +57,97 @@ public class Main {
             System.out.print("Enter amount: ");
             double amount = Double.parseDouble(scanner.nextLine());
 
-            String date = java.time.LocalDate.now().toString();
-            String time = java.time.LocalTime.now().toString();
+            // Payments must be negative
+            if (!isDeposit) {
+                amount = -Math.abs(amount);
+            }
 
-            String line = date + "|" + time + "|" + description + "|" + vendor + "|" + amount;
+            String line = LocalDate.now() + "|" +
+                    LocalTime.now().withNano(0) + "|" +
+                    description + "|" +
+                    vendor + "|" +
+                    amount;
 
-            java.io.FileWriter writer = new java.io.FileWriter(filePath, true);
+            FileWriter writer = new FileWriter(filePath, true);
             writer.write(line + "\n");
             writer.close();
 
-            System.out.println("Deposit added successfully!");
+            System.out.println(isDeposit ? "Deposit added successfully!" : "Payment added successfully!");
 
         } catch (Exception e) {
-            System.out.println("Error adding deposit.");
-        }
-    }
-
-    // Add money going out of the account
-    public static void addPayment() {
-        try {
-            System.out.print("Enter description: ");
-            String description = scanner.nextLine();
-
-            System.out.print("Enter vendor: ");
-            String vendor = scanner.nextLine();
-
-            System.out.print("Enter amount: ");
-            double amount = Double.parseDouble(scanner.nextLine());
-
-            amount = -Math.abs(amount);
-
-            String date = java.time.LocalDate.now().toString();
-            String time = java.time.LocalTime.now().toString();
-
-            String line = date + "|" + time + "|" + description + "|" + vendor + "|" + amount;
-
-            java.io.FileWriter writer = new java.io.FileWriter(filePath, true);
-            writer.write(line + "\n");
-            writer.close();
-
-            System.out.println("Payment added successfully!");
-
-        } catch (Exception e) {
-            System.out.println("Error adding payment.");
+            System.out.println("Error adding transaction.");
         }
     }
 
     // Ledger menu
     public static void showLedgerMenu() {
-        boolean inLedger = true;
-
-        while (inLedger) {
+        while (true) {
             System.out.println("\n=== Ledger Menu ===");
             System.out.println("A) All");
             System.out.println("D) Deposits");
             System.out.println("P) Payments");
             System.out.println("R) Reports");
             System.out.println("H) Home");
-            System.out.print("Choose an option: ");
+            System.out.print("Choose option: ");
 
             String choice = scanner.nextLine().trim().toUpperCase();
 
             switch (choice) {
                 case "A":
-                    showLedger();
+                    showTransactions("ALL");
                     break;
                 case "D":
-                    showDeposits();
+                    showTransactions("DEPOSIT");
                     break;
                 case "P":
-                    showPayments();
+                    showTransactions("PAYMENT");
                     break;
                 case "R":
                     showReportsMenu();
                     break;
                 case "H":
-                    inLedger = false;
-                    break;
+                    return;
                 default:
                     System.out.println("Invalid option.");
             }
         }
     }
 
-    // Show all transactions
-    public static void showLedger() {
+    // Shows all, deposits, or payments
+    public static void showTransactions(String type) {
         try {
-            java.io.BufferedReader reader =
-                    new java.io.BufferedReader(new java.io.FileReader(filePath));
-
-            String line;
-
-            System.out.println("\n=== Ledger ===");
-
-            while ((line = reader.readLine()) != null) {
-                printTransaction(line);
-            }
-
-            reader.close();
-
-        } catch (Exception e) {
-            System.out.println("Error reading ledger.");
-        }
-    }
-
-    // Show only deposits
-    public static void showDeposits() {
-        try {
-            java.io.BufferedReader reader =
-                    new java.io.BufferedReader(new java.io.FileReader(filePath));
-
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
             String line;
             boolean found = false;
 
-            System.out.println("\n=== Deposits ===");
+            System.out.println("\n=== " + type + " TRANSACTIONS ===");
 
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split("\\|");
                 double amount = Double.parseDouble(parts[4]);
 
-                if (amount > 0) {
+                if (type.equals("ALL")
+                        || (type.equals("DEPOSIT") && amount > 0)
+                        || (type.equals("PAYMENT") && amount < 0)) {
                     printTransaction(line);
                     found = true;
                 }
             }
 
             if (!found) {
-                System.out.println("No deposits found.");
+                System.out.println("No transactions found.");
             }
 
             reader.close();
 
         } catch (Exception e) {
-            System.out.println("Error reading deposits.");
-        }
-    }
-
-    // Show only payments
-    public static void showPayments() {
-        try {
-            java.io.BufferedReader reader =
-                    new java.io.BufferedReader(new java.io.FileReader(filePath));
-
-            String line;
-            boolean found = false;
-
-            System.out.println("\n=== Payments ===");
-
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split("\\|");
-                double amount = Double.parseDouble(parts[4]);
-
-                if (amount < 0) {
-                    printTransaction(line);
-                    found = true;
-                }
-            }
-
-            if (!found) {
-                System.out.println("No payments found.");
-            }
-
-            reader.close();
-
-        } catch (Exception e) {
-            System.out.println("Error reading payments.");
+            System.out.println("Error reading transactions.");
         }
     }
 
     // Reports menu
     public static void showReportsMenu() {
-        boolean inReports = true;
-
-        while (inReports) {
+        while (true) {
             System.out.println("\n=== Reports Menu ===");
             System.out.println("1) Month To Date");
             System.out.println("2) Previous Month");
@@ -238,22 +156,22 @@ public class Main {
             System.out.println("5) Search by Vendor");
             System.out.println("6) Custom Search");
             System.out.println("0) Back");
-            System.out.print("Choose an option: ");
+            System.out.print("Choose option: ");
 
             String choice = scanner.nextLine();
 
             switch (choice) {
                 case "1":
-                    showMonthToDate();
+                    reportByDate("MONTH");
                     break;
                 case "2":
-                    showPreviousMonth();
+                    reportByDate("PREVIOUS_MONTH");
                     break;
                 case "3":
-                    showYearToDate();
+                    reportByDate("YEAR");
                     break;
                 case "4":
-                    showPreviousYear();
+                    reportByDate("PREVIOUS_YEAR");
                     break;
                 case "5":
                     searchByVendor();
@@ -262,156 +180,57 @@ public class Main {
                     customSearch();
                     break;
                 case "0":
-                    inReports = false;
-                    break;
+                    return;
                 default:
                     System.out.println("Invalid option.");
             }
         }
     }
 
-    // Month to date report
-    public static void showMonthToDate() {
+    // Handles all date reports
+    public static void reportByDate(String type) {
         try {
-            java.io.BufferedReader reader =
-                    new java.io.BufferedReader(new java.io.FileReader(filePath));
-
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
             String line;
             boolean found = false;
-            java.time.LocalDate now = java.time.LocalDate.now();
+            LocalDate today = LocalDate.now();
 
-            System.out.println("\n=== Month To Date ===");
+            System.out.println("\n=== Report ===");
 
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split("\\|");
-                java.time.LocalDate transactionDate = java.time.LocalDate.parse(parts[0]);
+                LocalDate date = LocalDate.parse(parts[0]);
 
-                if (transactionDate.getMonth() == now.getMonth()
-                        && transactionDate.getYear() == now.getYear()) {
+                boolean match =
+                        (type.equals("MONTH") && date.getMonth() == today.getMonth() && date.getYear() == today.getYear())
+                                || (type.equals("PREVIOUS_MONTH") && date.getMonth() == today.minusMonths(1).getMonth() && date.getYear() == today.minusMonths(1).getYear())
+                                || (type.equals("YEAR") && date.getYear() == today.getYear())
+                                || (type.equals("PREVIOUS_YEAR") && date.getYear() == today.getYear() - 1);
+
+                if (match) {
                     printTransaction(line);
                     found = true;
                 }
             }
 
             if (!found) {
-                System.out.println("No transactions found for this month.");
+                System.out.println("No transactions found.");
             }
 
             reader.close();
 
         } catch (Exception e) {
-            System.out.println("Error reading Month To Date.");
+            System.out.println("Error reading report.");
         }
     }
 
-    // Previous month report
-    public static void showPreviousMonth() {
-        try {
-            java.io.BufferedReader reader =
-                    new java.io.BufferedReader(new java.io.FileReader(filePath));
-
-            String line;
-            boolean found = false;
-            java.time.LocalDate previousMonth = java.time.LocalDate.now().minusMonths(1);
-
-            System.out.println("\n=== Previous Month ===");
-
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split("\\|");
-                java.time.LocalDate transactionDate = java.time.LocalDate.parse(parts[0]);
-
-                if (transactionDate.getMonth() == previousMonth.getMonth()
-                        && transactionDate.getYear() == previousMonth.getYear()) {
-                    printTransaction(line);
-                    found = true;
-                }
-            }
-
-            if (!found) {
-                System.out.println("No transactions found for previous month.");
-            }
-
-            reader.close();
-
-        } catch (Exception e) {
-            System.out.println("Error reading Previous Month.");
-        }
-    }
-
-    // Year to date report
-    public static void showYearToDate() {
-        try {
-            java.io.BufferedReader reader =
-                    new java.io.BufferedReader(new java.io.FileReader(filePath));
-
-            String line;
-            boolean found = false;
-            int currentYear = java.time.LocalDate.now().getYear();
-
-            System.out.println("\n=== Year To Date ===");
-
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split("\\|");
-                java.time.LocalDate transactionDate = java.time.LocalDate.parse(parts[0]);
-
-                if (transactionDate.getYear() == currentYear) {
-                    printTransaction(line);
-                    found = true;
-                }
-            }
-
-            if (!found) {
-                System.out.println("No transactions found for this year.");
-            }
-
-            reader.close();
-
-        } catch (Exception e) {
-            System.out.println("Error reading Year To Date.");
-        }
-    }
-
-    // Previous year report
-    public static void showPreviousYear() {
-        try {
-            java.io.BufferedReader reader =
-                    new java.io.BufferedReader(new java.io.FileReader(filePath));
-
-            String line;
-            boolean found = false;
-            int previousYear = java.time.LocalDate.now().getYear() - 1;
-
-            System.out.println("\n=== Previous Year ===");
-
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split("\\|");
-                java.time.LocalDate transactionDate = java.time.LocalDate.parse(parts[0]);
-
-                if (transactionDate.getYear() == previousYear) {
-                    printTransaction(line);
-                    found = true;
-                }
-            }
-
-            if (!found) {
-                System.out.println("No transactions found for previous year.");
-            }
-
-            reader.close();
-
-        } catch (Exception e) {System.out.println("Error reading Previous Year.");
-        }
-    }
-
-    // Search transactions by vendor name
+    // Search by vendor name
     public static void searchByVendor() {
         System.out.print("Enter vendor name: ");
         String input = scanner.nextLine().trim().toLowerCase();
 
         try {
-            java.io.BufferedReader reader =
-                    new java.io.BufferedReader(new java.io.FileReader(filePath));
-
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
             String line;
             boolean found = false;
 
@@ -419,26 +238,80 @@ public class Main {
 
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split("\\|");
-                String vendor = parts[3].toLowerCase();
 
-                if (vendor.contains(input)) {
+                if (parts[3].toLowerCase().contains(input)) {
                     printTransaction(line);
                     found = true;
                 }
             }
 
             if (!found) {
-                System.out.println("No transactions found for that vendor.");
+                System.out.println("No transactions found.");
             }
 
             reader.close();
 
         } catch (Exception e) {
-            System.out.println("Error searching by vendor.");
+            System.out.println("Error searching vendor.");
         }
     }
 
-    // Print one transaction in a clean readable format
+    // Bonus custom search
+    public static void customSearch() {
+        System.out.print("Start date (YYYY-MM-DD or blank): ");
+        String startInput = scanner.nextLine().trim();
+
+        System.out.print("End date (YYYY-MM-DD or blank): ");
+        String endInput = scanner.nextLine().trim();
+
+        System.out.print("Description or blank: ");
+        String descInput = scanner.nextLine().trim().toLowerCase();
+
+        System.out.print("Vendor or blank: ");
+        String vendorInput = scanner.nextLine().trim().toLowerCase();
+
+        System.out.print("Amount or blank: ");
+        String amountInput = scanner.nextLine().trim();
+
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+            String line;
+            boolean found = false;
+
+            System.out.println("\n=== Custom Search ===");
+
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split("\\|");
+
+                LocalDate date = LocalDate.parse(parts[0]);
+                String desc = parts[2].toLowerCase();
+                String vendor = parts[3].toLowerCase();
+                String amount = parts[4];
+
+                boolean match =
+                        (startInput.isEmpty() || !date.isBefore(LocalDate.parse(startInput)))
+                                && (endInput.isEmpty() || !date.isAfter(LocalDate.parse(endInput)))
+                                && (descInput.isEmpty() || desc.contains(descInput))
+                                && (vendorInput.isEmpty() || vendor.contains(vendorInput))
+                                && (amountInput.isEmpty() || amount.equals(amountInput));
+                if (match) {
+                    printTransaction(line);
+                    found = true;
+                }
+            }
+
+            if (!found) {
+                System.out.println("No matching transactions found.");
+            }
+
+            reader.close();
+
+        } catch (Exception e) {
+            System.out.println("Error running custom search.");
+        }
+    }
+
+    // Clean output format
     public static void printTransaction(String line) {
         String[] parts = line.split("\\|");
 
@@ -449,86 +322,5 @@ public class Main {
                         " | Vendor: " + parts[3] +
                         " | Amount: " + parts[4]
         );
-    }
-    // Bonus: search by optional date, description, vendor, and amount
-    public static void customSearch() {
-        System.out.print("Start date (YYYY-MM-DD or blank): ");
-        String startInput = scanner.nextLine().trim();
-
-        System.out.print("End date (YYYY-MM-DD or blank): ");
-        String endInput = scanner.nextLine().trim();
-
-        System.out.print("Description (or blank): ");
-        String descriptionInput = scanner.nextLine().trim().toLowerCase();
-
-        System.out.print("Vendor (or blank): ");
-        String vendorInput = scanner.nextLine().trim().toLowerCase();
-
-        System.out.print("Amount (or blank): ");
-        String amountInput = scanner.nextLine().trim();
-
-        try {
-            java.io.BufferedReader reader =
-                    new java.io.BufferedReader(new java.io.FileReader(filePath));
-
-            String line;
-            boolean found = false;
-
-            System.out.println("\n=== Custom Search Results ===");
-
-            while ((line = reader.readLine()) != null) {
-                String[] parts = line.split("\\|");
-
-                java.time.LocalDate transactionDate = java.time.LocalDate.parse(parts[0]);
-                String description = parts[2].toLowerCase();
-                String vendor = parts[3].toLowerCase();
-                double amount = Double.parseDouble(parts[4]);
-
-                boolean matches = true;
-
-                if (!startInput.isEmpty()) {
-                    java.time.LocalDate startDate = java.time.LocalDate.parse(startInput);
-                    if (transactionDate.isBefore(startDate)) {
-                        matches = false;
-                    }
-                }
-
-                if (!endInput.isEmpty()) {
-                    java.time.LocalDate endDate = java.time.LocalDate.parse(endInput);
-                    if (transactionDate.isAfter(endDate)) {
-                        matches = false;
-                    }
-                }
-
-                if (!descriptionInput.isEmpty() && !description.contains(descriptionInput)) {
-                    matches = false;
-                }
-
-                if (!vendorInput.isEmpty() && !vendor.contains(vendorInput)) {
-                    matches = false;
-                }
-
-                if (!amountInput.isEmpty()) {
-                    double searchAmount = Double.parseDouble(amountInput);
-                    if (amount != searchAmount) {
-                        matches = false;
-                    }
-                }
-
-                if (matches) {
-                    printTransaction(line);
-                    found = true;
-                }
-            }
-
-            if (!found) {
-                System.out.println("No transactions matched your search.");
-            }
-
-            reader.close();
-
-        } catch (Exception e) {
-            System.out.println("Error running custom search.");
-        }
     }
 }
