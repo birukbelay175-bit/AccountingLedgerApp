@@ -229,9 +229,9 @@ public class Main {
         }
     }
 
-    // =========================
+    // ========================
     // SEARCH BY VENDOR
-    // =========================
+    // ========================
     public static void searchByVendor() {
         System.out.print("Enter vendor: ");
         String input = scanner.nextLine().toLowerCase();
